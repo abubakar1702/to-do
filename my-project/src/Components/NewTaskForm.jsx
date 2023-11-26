@@ -1,77 +1,90 @@
 import React, { useState, useEffect } from 'react';
 
 const getLocalTasks = () => {
-  try {
-    const allRecords = localStorage.getItem('userRecords');
-    if (allRecords) {
-      return JSON.parse(allRecords);
-    } else {
-      return [];
-    }
-  } catch (error) {
-    console.error('Error parsing JSON:', error);
-    return [];
-  }
-};
-
-const NewTaskForm = () => {
-  const [task, setTask] = useState({
-    tasks: '',
-    person: '',
-    date: '',
-  });
-
-  const [storedRecords] = useState(getLocalTasks());
-  const [storedTasks, setStoredTasks] = useState([]);
-
-  useEffect(() => {
-    const storedTasksFromLocalStorage =
-      JSON.parse(localStorage.getItem('tasks')) || [];
-    setStoredTasks(storedTasksFromLocalStorage);
-  }, []);
-
-  const saveTasksToLocal = (tasks) => {
-    localStorage.setItem('tasks', JSON.stringify(tasks));
-  };
-
-  const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
-  };
-
-  const handleInput = (e) => {
-    const name = e.target.name;
-    const value = e.target.value;
-
-    setTask((prevTasks) => ({ ...prevTasks, [name]: value }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!task.tasks || !task.person || !task.date) {
-      return;
-    } else {
-      const formattedDate = formatDate(task.date);
-      const updatedTasks = [...storedTasks, { ...task, date: formattedDate }];
-      setStoredTasks(updatedTasks);
-      saveTasksToLocal(updatedTasks);
-      setTask({ tasks: '', person: '', date: '' });
-    }
-  };
-
-  const handleDelete = (index) => {
-    const updatedTasks = storedTasks.filter((_, i) => i !== index);
-    setStoredTasks(updatedTasks);
-    saveTasksToLocal(updatedTasks);
-  };
-
-  const handleEdit = (index) => {
-    const editedTask = storedTasks[index];
-    setTask(editedTask);
-    handleDelete(index);
-  };
-
-  const today = new Date().toISOString().split('T')[0];
+    try {
+        const allRecords = localStorage.getItem('userRecords');
+        if (allRecords) {
+          return JSON.parse(allRecords);
+        } else {
+          return [];
+        }
+      } catch (error) {
+        console.error('Error parsing JSON:', error);
+        return [];
+      }
+    };
+    
+    const NewTaskForm = () => {
+      const [task, setTask] = useState({
+        tasks: '',
+        person: '',
+        date: '',
+      });
+    
+      const [storedRecords] = useState(getLocalTasks());
+      const [storedTasks, setStoredTasks] = useState([]);
+      const [deleteConfirmation, setDeleteConfirmation] = useState({
+        isOpen: false,
+        indexToDelete: null,
+      });
+    
+      useEffect(() => {
+        const storedTasksFromLocalStorage =
+          JSON.parse(localStorage.getItem('tasks')) || [];
+        setStoredTasks(storedTasksFromLocalStorage);
+      }, []);
+    
+      const saveTasksToLocal = (tasks) => {
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+      };
+    
+      const formatDate = (dateString) => {
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        return new Date(dateString).toLocaleDateString(undefined, options);
+      };
+    
+      const handleInput = (e) => {
+        const name = e.target.name;
+        const value = e.target.value;
+    
+        setTask((prevTasks) => ({ ...prevTasks, [name]: value }));
+      };
+    
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!task.tasks || !task.person || !task.date) {
+          return;
+        } else {
+          const formattedDate = formatDate(task.date);
+          const updatedTasks = [...storedTasks, { ...task, date: formattedDate }];
+          setStoredTasks(updatedTasks);
+          saveTasksToLocal(updatedTasks);
+          setTask({ tasks: '', person: '', date: '' });
+        }
+      };
+    
+      const handleDelete = (index) => {
+        setDeleteConfirmation({ isOpen: true, indexToDelete: index });
+      };
+    
+      const confirmDelete = () => {
+        const indexToDelete = deleteConfirmation.indexToDelete;
+        const updatedTasks = storedTasks.filter((_, i) => i !== indexToDelete);
+        setStoredTasks(updatedTasks);
+        saveTasksToLocal(updatedTasks);
+        setDeleteConfirmation({ isOpen: false, indexToDelete: null });
+      };
+    
+      const cancelDelete = () => {
+        setDeleteConfirmation({ isOpen: false, indexToDelete: null });
+      };
+    
+      const handleEdit = (index) => {
+        const editedTask = storedTasks[index];
+        setTask(editedTask);
+      };
+    
+      const today = new Date().toISOString().split('T')[0];
 
   return (
     <div className="container mx-auto p-4 min-h-screen flex flex-col md:flex-row">
@@ -176,6 +189,30 @@ const NewTaskForm = () => {
           </ul>
         </div>
       </div>
+
+      {deleteConfirmation.isOpen && (
+        <div className="fixed inset-0 bg-gray-700 bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <p className="text-xl font-semibold mb-4">
+              Are you sure you want to delete this task?
+            </p>
+            <div className="flex justify-end">
+              <button
+                className="bg-red-500 text-white mx-2 p-2 rounded hover:bg-red-600"
+                onClick={confirmDelete}
+              >
+                Delete
+              </button>
+              <button
+                className="bg-gray-500 text-white mx-2 p-2 rounded hover:bg-gray-600"
+                onClick={cancelDelete}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
