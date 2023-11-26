@@ -8,6 +8,11 @@ const CreateUser = () => {
         phone: ''
     });
 
+    const [deleteConfirmation, setDeleteConfirmation] = useState({
+        isOpen: false,
+        idToDelete: null
+    });
+
     const [records, setRecords] = useState([]);
     const [editingId, setEditingId] = useState(null);
 
@@ -38,9 +43,18 @@ const CreateUser = () => {
     };
 
     const handleDelete = (id) => {
-        const updatedRecords = records.filter((record) => record.id !== id);
+        setDeleteConfirmation({ isOpen: true, idToDelete: id });
+    };
+
+    const confirmDelete = () => {
+        const updatedRecords = records.filter((record) => record.id !== deleteConfirmation.idToDelete);
         setRecords(updatedRecords);
         localStorage.setItem('userRecords', JSON.stringify(updatedRecords));
+        setDeleteConfirmation({ isOpen: false, idToDelete: null });
+    };
+
+    const cancelDelete = () => {
+        setDeleteConfirmation({ isOpen: false, idToDelete: null });
     };
 
     const handleEdit = (id) => {
@@ -52,8 +66,8 @@ const CreateUser = () => {
     };
 
     return (
-        <div className="flex flex-row p-6 m-6">
-            <div className="w-[50%]">
+        <div className="flex flex-col md:flex-row p-6 m-6">
+            <div className="md:w-1/2 p-4">
                 <h2 className="text-center text-xl p-5">Create employee profile</h2>
                 <form className="p-4" onSubmit={handleSubmit}>
                     <div className="mb-4">
@@ -120,45 +134,68 @@ const CreateUser = () => {
                 </form>
             </div>
 
-            <div className="w-[50%]">
+            <div className="md:w-1/2 p-4">
                 <h2 className="text-center text-xl p-5">Employee Lists</h2>
                 <p className="text-center mb-2 text-gray-700">Total Employees: {records.length}</p>
-                <table className="w-full">
-                    <thead>
-                        <tr>
-                            <th className="p-2">Name</th>
-                            <th className="p-2">Designation</th>
-                            <th className="p-2">Email</th>
-                            <th className="p-2">Phone</th>
-                            <th className="p-2">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {records.map((curElem) => (
-                            <tr key={curElem.id} className="border-b">
-                                <td className="p-2">{curElem.name}</td>
-                                <td className="p-2">{curElem.designation}</td>
-                                <td className="p-2">{curElem.email}</td>
-                                <td className="p-2">{curElem.phone}</td>
-                                <td className="p-2 flex">
-                                    <button
-                                        onClick={() => handleEdit(curElem.id)}
-                                        className="bg-yellow-500 text-white p-1 rounded mr-1 flex-1"
-                                    >
-                                        Edit
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(curElem.id)}
-                                        className="bg-red-500 text-white p-1 rounded ml-1 flex-1"
-                                    >
-                                        Delete
-                                    </button>
-                                </td>
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead>
+                            <tr>
+                                <th className="p-2">Name</th>
+                                <th className="p-2">Designation</th>
+                                <th className="p-2">Email</th>
+                                <th className="p-2">Phone</th>
+                                <th className="p-2">Actions</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {records.map((curElem) => (
+                                <tr key={curElem.id} className="border-b">
+                                    <td className="p-2">{curElem.name}</td>
+                                    <td className="p-2">{curElem.designation}</td>
+                                    <td className="p-2">{curElem.email}</td>
+                                    <td className="p-2">{curElem.phone}</td>
+                                    <td className="p-2 flex">
+                                        <button
+                                            onClick={() => handleEdit(curElem.id)}
+                                            className="bg-yellow-500 text-white p-1 rounded mr-1 flex-1"
+                                        >
+                                            Edit
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(curElem.id)}
+                                            className="bg-red-500 text-white p-1 rounded ml-1 flex-1"
+                                        >
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
+            {deleteConfirmation.isOpen && (
+                <div className="fixed inset-0 bg-gray-700 bg-opacity-50 flex items-center justify-center">
+                    <div className="bg-white p-6 rounded-lg shadow-lg">
+                        <p className="text-xl font-semibold mb-4">Are you sure you want to delete this employee?</p>
+                        <div className="flex justify-end">
+                            <button
+                                className="bg-red-500 mx-2 text-white p-2 rounded hover:bg-red-600"
+                                onClick={confirmDelete}
+                            >
+                                Delete
+                            </button>
+                            <button
+                                className="bg-gray-500 mx-2 text-white p-2 rounded hover:bg-gray-600"
+                                onClick={cancelDelete}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
